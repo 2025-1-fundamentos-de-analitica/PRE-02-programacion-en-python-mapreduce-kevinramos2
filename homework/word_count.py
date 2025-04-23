@@ -5,6 +5,7 @@
 import fileinput
 import glob
 import os.path
+import string
 import time
 from itertools import groupby
 
@@ -63,7 +64,11 @@ def load_input(input_directory):
 #
 def line_preprocessing(sequence):
     """Line Preprocessing"""
-
+    sequence = [
+        (key, value.translate(str.maketrans("", "", string.punctuation)).lower())
+        for key, value in sequence
+    ]
+    return sequence
 
 #
 # Escriba una función llamada maper que recibe una lista de tuplas de la
@@ -79,6 +84,7 @@ def line_preprocessing(sequence):
 #
 def mapper(sequence):
     """Mapper"""
+    return [(word, 1) for _, value in sequence for word in value.split()]
 
 
 #
@@ -94,7 +100,7 @@ def mapper(sequence):
 #
 def shuffle_and_sort(sequence):
     """Shuffle and Sort"""
-
+    return sorted(sequence, key=lambda x: x[0])
 
 #
 # Escriba la función reducer, la cual recibe el resultado de shuffle_and_sort y
@@ -104,7 +110,10 @@ def shuffle_and_sort(sequence):
 #
 def reducer(sequence):
     """Reducer"""
-
+    result = []
+    for key, group in groupby(sequence, lambda x: x[0]):
+        result.append((key, sum(value for _, value in group)))
+    return result
 
 #
 # Escriba la función create_ouptput_directory que recibe un nombre de
@@ -112,6 +121,11 @@ def reducer(sequence):
 #
 def create_ouptput_directory(output_directory):
     """Create Output Directory"""
+    if os.path.exists(output_directory):
+        for file in glob.glob(f"{output_directory}/*"):
+            os.remove(file)
+        os.rmdir(output_directory)
+    os.makedirs(output_directory)
 
 
 #
@@ -124,7 +138,9 @@ def create_ouptput_directory(output_directory):
 #
 def save_output(output_directory, sequence):
     """Save Output"""
-
+    with open(f"{output_directory}/part-00000", "w", encoding="utf-8") as f:
+        for key, value in sequence:
+            f.write(f"{key}\t{value}\n")
 
 #
 # La siguiente función crea un archivo llamado _SUCCESS en el directorio
@@ -132,6 +148,9 @@ def save_output(output_directory, sequence):
 #
 def create_marker(output_directory):
     """Create Marker"""
+    with open(f"{output_directory}/_SUCCESS", "w", encoding="utf-8") as f:
+        f.write("")
+
 
 
 #
